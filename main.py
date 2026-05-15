@@ -2,7 +2,7 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 # Professional branding
-TOKEN = "8668969527:AAGmWkKGCF5s02aFNvByPqEo3sW7kVr9lRA"
+TOKEN = "8668969527:AAHHSzBwANVN77yXMlH5EdBtb60Axk03PuM"
 ADMIN_ID = 1128630065  
 
 # 1. The Start Menu
