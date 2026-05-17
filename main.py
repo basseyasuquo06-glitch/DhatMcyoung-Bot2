@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # --- CONFIGURATION ---
-TOKEN = "8668969527:AAGO6Cf69SBpDSrMem9xhGNsIj1eOK_GdLE"  # Your active Bot Token
+TOKEN = "8658917705:AAHjX8ELojJyizxv4IvpqE1lS3avqohvXYg"  # Your active Bot Token
 ADMIN_ID = 1128630065  # Your verified Admin Telegram ID
 
 # Temporary storage for your trades
