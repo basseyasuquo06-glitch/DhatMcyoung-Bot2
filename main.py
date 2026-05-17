@@ -1,97 +1,119 @@
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+import logging
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Professional branding
-TOKEN = "8668969527:AAHHSzBwANVN77yXMlH5EdBtb60Axk03PuM"
-ADMIN_ID = 1128630065  
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# 1. The Start Menu
+# --- CONFIGURATION ---
+TOKEN = "8668969527:AAHHSzBwANVN77yXMlH5EdBtb60Axk03PuM"  # Your active Bot Token
+ADMIN_ID = 1128630065  # Your verified Admin Telegram ID
+
+# Temporary storage for your trades
+current_trades = {
+    "available": "No active trade setups at the moment. Stay tuned!",
+    "running": "No running trades currently.",
+    "close": "All recent trades are closed. Check Monthly Performance for stats!"
+}
+
+# --- HANDLERS ---
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Sends the premium welcome banner with inline buttons."""
+    photo_url = "https://i.ibb.co/6R0D5VpS/premium-dark-crypto-forex-trading-gold-coin-chart-aesthetic-illustration-phone-wallpaper-banner.jpg"
+    
+    caption_text = (
+        "| **DHATMCYOUNG BOT - TRADING SIGNALS**\n"
+        "📈 *Your Path to consistent Risk-to-Reward (RR) gains.*\n\n"
+        "Welcome to the official command center. Use the menu below "
+        "to view live setups, check performance reports, and access resources."
+    )
+    
+    # Premium stacked button layout with all your updated details
     keyboard = [
-        ["✅ Available Trades", "⏳ Running Trades"],
-        ["💰 Close Trades", "📊 Monthly Performance"],
-        ["🏧 Deposit", "▶️ Goto MT5"],
-        ["📚 MT5 Training", "📚 Mentorship"],
-        ["👨🏽‍💻 Channel", "👨🏽‍💻 Support"]
+        [InlineKeyboardButton("📢 Join Main Channel", url="https://t.me/+MydiesYR63MxODMx")], 
+        [InlineKeyboardButton("🚀 Crypto Only", url="https://t.me/+MydiesYR63MxODMx")], 
+        [InlineKeyboardButton("✅ Available Trades", callback_data="view_available")],
+        [InlineKeyboardButton("🏃‍♂️ Running Trades", callback_data="view_running")],
+        [InlineKeyboardButton("📊 Monthly Performance", callback_data="view_performance")],
+        [InlineKeyboardButton("📚 Free MT5 Training", url="https://youtu.be/uTudeCn2VaE?si=fk9H61A7bJOW4LW5")], # Replace with your training link if needed
+        [InlineKeyboardButton("👩🏽‍💻 Mentorship (@DhatMcyoung)", url="https://t.me/DhatMcyoung")]
     ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text(
-        "Welcome to DHATMCYOUNG Signals 👩🏽‍💻📈\nChoose an option:",
-        reply_markup=reply_markup
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_photo(
+        photo=photo_url,
+        caption=caption_text,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
     )
 
-# 2. Manual Update Commands (Admin Only)
-async def update_trades(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Only allow YOU to change the trades
+async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handles the action when users click the inline buttons."""
+    query = update.callback_query
+    await query.answer()  # Stops the loading wheel on Telegram
+    
+    if query.data == "view_available":
+        await query.message.reply_text(f"✅ **Available Trades:**\n\n{current_trades['available']}", parse_mode="Markdown")
+    
+    elif query.data == "view_running":
+        await query.message.reply_text(f"🏃‍♂️ **Running Trades:**\n\n{current_trades['running']}", parse_mode="Markdown")
+        
+    elif query.data == "view_performance":
+        performance_text = (
+            "📊 **PERFORMANCE REPORT**\n"
+            "• Month: April 2026\n"
+            "• Net Performance: +36.33RR 🔥\n\n"
+            "Consistency is key. Risk managed, profits secured."
+        )
+        await query.message.reply_text(performance_text, parse_mode="Markdown")
+
+# --- ADMIN COMMANDS FOR DHATMCYOUNG ---
+
+async def set_available(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
-
-    text = " ".join(context.args)
-    if not text:
-        await update.message.reply_text("Usage: /setavailable GBPAUD SELL 📉")
+    if not context.args:
+        await update.message.reply_text("Format: /setavailable [trade details]")
         return
+    current_trades["available"] = " ".join(context.args)
+    await update.message.reply_text("✅ Available trades updated successfully!")
+
+async def set_running(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+    if not context.args:
+        await update.message.reply_text("Format: /setrunning [trade details]")
+        return
+    current_trades["running"] = " ".join(context.args)
+    await update.message.reply_text("🏃‍♂️ Running trades updated successfully!")async def set_close(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+    if not context.args:
+        await update.message.reply_text("Format: /setclose [details]")
+        return
+    current_trades["close"] = " ".join(context.args)
+    current_trades["available"] = "No active trade setups at the moment. Stay tuned!"
+    await update.message.reply_text("🔒 Trade status closed and updated!")
+
+# --- MAIN ENGINE ---
+def main():
+    application = Application.builder().token(TOKEN).build()
+
+    # Base commands
+    application.add_handler(CommandHandler("start", start))
     
-    command = update.message.text.split()[0]
+    # Inline button listener
+    application.add_handler(CallbackQueryHandler(button_click))
     
-    if command == "/setavailable":
-        context.bot_data['available'] = text
-        await update.message.reply_text("✅ Available Trades Updated!")
-    elif command == "/setrunning":
-        context.bot_data['running'] = text
-        await update.message.reply_text("⏳ Running Trades Updated!")
-    elif command == "/setclose":
-        context.bot_data['close'] = text
-        await update.message.reply_text("💰 Close Trades Updated!")
+    # Admin commands
+    application.add_handler(CommandHandler("setavailable", set_available))
+    application.add_handler(CommandHandler("setrunning", set_running))
+    application.add_handler(CommandHandler("setclose", set_close))
 
-# 3. Handling Button Clicks
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    
-    if text == "✅ Available Trades":
-        # Pulls the text you set manually
-        msg = context.bot_data.get('available', "No active signals. Awaiting entry... 👨🏽‍💻")
-        await update.message.reply_text(f"🔥 *AVAILABLE TRADES* 🔥\n\n{msg}", parse_mode="Markdown")
+    print("DHATMCYOUNG Premium Bot is running live...")
+    application.run_polling()
 
-    elif text == "⏳ Running Trades":
-        msg = context.bot_data.get('running', "No trades currently running. 📉")
-        await update.message.reply_text(f"⏳ *RUNNING TRADES* ⏳\n\n{msg}", parse_mode="Markdown")
-
-    elif text == "💰 Close Trades":
-        msg = context.bot_data.get('close', "No recently closed trades. ✅")
-        await update.message.reply_text(f"💰 *CLOSED TRADES* 💰\n\n{msg}", parse_mode="Markdown")
-
-    elif text == "🏧 Deposit":
-        await update.message.reply_text("Fund your account on Exness here:\nhttps://my.exness.com/")
-
-    elif text == "▶️ Goto MT5":
-        await update.message.reply_text("Launch MetaTrader 5:\nhttps://metatrader5.com/download")
-
-    elif text == "📚 Mentorship":
-        await update.message.reply_text("Level up your skills. Contact me for 1-on-1 Mentorship:\n@dhatmcyoung")
-
-    elif text == "👨🏽‍💻 Channel":
-        await update.message.reply_text("Join the official DHATMCYOUNG Channel:\nhttps://t.me/+RWV4PadJa4YxYjA8")
-
-    elif text == "📊 Monthly Performance":
-        performance_report = "📈 *Performance*\n\n• Trades Closed: 7\n• Total RR: +24RR"
-        await update.message.reply_text(performance_report, parse_mode="Markdown")
-
-    elif text == "📚 MT5 Training":
-        await update.message.reply_text("Master MT5 here:\nhttps://youtu.be/uTudeCn2VaE?si=fk9H61A7bJOW4LW5")
-
-    elif text == "👨🏽‍💻 Support":
-        await update.message.reply_text("Contact Support: @dhatmcyoung")
-
-# 4. Starting the Bot
-if __name__ == "__main__":
-    app = Application.builder().token(TOKEN).build()
-    
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("setavailable", update_trades))
-    app.add_handler(CommandHandler("setrunning", update_trades))
-    app.add_handler(CommandHandler("setclose", update_trades))
-    
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    
-    print("DHATMCYOUNG Bot is live!")
-    app.run_polling()
+if name == "__main__":
+    main()
