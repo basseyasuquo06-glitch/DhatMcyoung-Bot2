@@ -87,7 +87,8 @@ async def set_running(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Format: /setrunning [trade details]")
         return
     current_trades["running"] = " ".join(context.args)
-    await update.message.reply_text("🏃‍♂️ Running trades updated successfully!")async def set_close(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🏃‍♂️ Running trades updated successfully!")
+    async def set_close(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
     if not context.args:
